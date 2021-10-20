@@ -1,13 +1,14 @@
-import React, { useContext } from 'react'
-import GlobalProvider from './context/Provider'
-import { GlobalContext } from './context/Provider'
+import React, {useContext} from 'react'
+import {GlobalContext} from './context/Provider'
 
 function App() {
-    const {authState} = useContext(GlobalContext)
+    const {user} = useContext(GlobalContext)
+    console.log(user)
     return (
-        <GlobalProvider>
-            {authState.user}
-        </GlobalProvider>
+        <>
+            <div>Hello</div>
+            <h1>{user}</h1>
+        </>
     )
 }
 
