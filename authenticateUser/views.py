@@ -1,8 +1,54 @@
-from django.shortcuts import render
-from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework.views import APIView
+from rest_framework.generics import CreateAPIView, RetrieveAPIView
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+from rest_framework import status
 
-from .serializers import MyTokenObtainPairSerializer
+from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.tokens import RefreshToken, OutstandingToken, BlacklistedToken
+from django.contrib.auth import get_user_model as User
+
+from .serializers import MyTokenObtainPairSerializer, UserCreateSerializer, UserDetailsSerializer
 
 
 class LoginView(TokenObtainPairView):
     serializer_class = MyTokenObtainPairSerializer
+
+
+class UserCreateView(CreateAPIView, TokenObtainPairView):
+    serializer_class = UserCreateSerializer
+
+
+class RetrieveUserView(RetrieveAPIView):
+    serializer_class = UserDetailsSerializer
+    permission_classes = (IsAuthenticated, )
+
+    def get_object(self):
+        return self.request.user
+
+
+class LogOutView(APIView):
+    permission_classes = (IsAuthenticated, )
+
+    def post(self, request):
+        refresh_token = request.data['refresh']
+        token = RefreshToken(refresh_token)
+        try:
+            refresh_token = request.data['refresh']
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+            return Response(status=status.HTTP_205_RESET_CONTENT)
+        except Exception as e:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+class LogOutAllView(APIView):
+    permission_classes = (IsAuthenticated, )
+
+    def post(self, request):
+        tokens = OutstandingToken.objects.filter(user_id=request.user.id)
+        for token in tokens:
+            t, _ = BlacklistedToken.objects.get_or_create(token=token)
+        return Response(status=status.HTTP_205_RESET_CONTENT)
+
+
